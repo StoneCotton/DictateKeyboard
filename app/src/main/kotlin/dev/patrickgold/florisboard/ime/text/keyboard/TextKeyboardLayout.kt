@@ -625,6 +625,7 @@ private class TextKeyboardLayoutController(
                                 }
                             }
                         }
+                        typeSpaceOfIdleGlide(pointer)
                         onTouchCancelInternal(event, pointer)
                     } else {
                         onTouchUpInternal(event, pointer)
@@ -653,6 +654,7 @@ private class TextKeyboardLayoutController(
                                     }
                                 }
                             }
+                            typeSpaceOfIdleGlide(pointer)
                             onTouchCancelInternal(event, pointer)
                         } else {
                             onTouchUpInternal(event, pointer)
@@ -870,6 +872,26 @@ private class TextKeyboardLayoutController(
             )
             restore?.let { keyboardManager.activeState.keyboardMode = it }
         }
+    }
+
+    /**
+     * Types the space of a space-bar press that the glide claimed and then never used — the thumb only
+     * rolled as it struck. Call when such a finger lifts, before the press is cancelled: the claim has
+     * already cancelled the key's own press, so the space has to be sent whole. See
+     * [SpaceGlide.liftTypesSpace].
+     */
+    private fun typeSpaceOfIdleGlide(pointer: TouchPointer) {
+        val key = pointer.activeKey ?: return
+        // A finger that slid onto the space bar from elsewhere (shift, say) pressed something else.
+        if (key !== pointer.initialKey || !pointer.hasTriggeredGestureMove) return
+        val code = key.computedDataOnDown.code
+        if (code != KeyCode.SPACE && code != KeyCode.CJK_SPACE) return
+        val typesSpace = SpaceGlide.liftTypesSpace(
+            movedCursor = pointer.glideAxis != null,
+            firedAction = pointer.hasCommittedSpaceAction,
+            longPressed = pointer.hasTriggeredLongPress,
+        )
+        if (typesSpace) inputEventDispatcher.sendDownUp(key.computedDataOnDown)
     }
 
     /**

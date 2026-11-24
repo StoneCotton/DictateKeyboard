@@ -16,6 +16,7 @@ import dev.patrickgold.florisboard.ime.text.gestures.swipeCommitDirection
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -379,5 +380,19 @@ class SpaceGlideTest {
             assertTrue(next >= line, "moved from $line to $next at $units units on the way back")
             line = next
         }
+    }
+
+    @Test
+    fun `a press the glide claimed but never used still types a space`() {
+        // The thumb rolled past the first report and nothing else happened. Before, this cancelled the
+        // space without a trace; at typing speed that was most spaces.
+        assertTrue(SpaceGlide.liftTypesSpace(movedCursor = false, firedAction = false, longPressed = false))
+    }
+
+    @Test
+    fun `a press that did something as a gesture does not also type a space`() {
+        assertFalse(SpaceGlide.liftTypesSpace(movedCursor = true, firedAction = false, longPressed = false))
+        assertFalse(SpaceGlide.liftTypesSpace(movedCursor = false, firedAction = true, longPressed = false))
+        assertFalse(SpaceGlide.liftTypesSpace(movedCursor = false, firedAction = false, longPressed = true))
     }
 }

@@ -171,4 +171,16 @@ object SpaceGlide {
         target < current -> if (upAllowed) target else current
         else -> if (downAllowed) target else current
     }
+
+    /**
+     * Whether lifting the finger should still type a space, for a press the glide had claimed.
+     *
+     * The glide claims a press on the detector's first report — a quarter of the swipe distance
+     * threshold, 8 dp at the stock setting — so the keys around the space bar cannot take the finger
+     * back. A thumb striking the space bar at typing speed rolls further than that. The claim alone used
+     * to cost the space: the cursor had not moved, nothing showed, and two words ran together. A claim is
+     * only a gesture once it has done something, so ask this at lift-off and type the space when it says so.
+     */
+    fun liftTypesSpace(movedCursor: Boolean, firedAction: Boolean, longPressed: Boolean): Boolean =
+        !movedCursor && !firedAction && !longPressed
 }
